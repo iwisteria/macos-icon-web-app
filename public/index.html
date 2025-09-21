@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOSアイコン作成ツール</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: #fafafa;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area.has-file {
+            border-color: #4CAF50;
+            background: #f8fff8;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
+        .upload-area.dragover .upload-icon,
+        .upload-area:hover .upload-icon {
+            color: #667eea;
+        }
+
+        .upload-area.has-file .upload-icon {
+            color: #4CAF50;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .preview-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .preview-container {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .preview-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+        }
+
+        .preview-info {
+            flex: 1;
+        }
+
+        .preview-info h3 {
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .preview-info p {
+            color: #666;
+            margin-bottom: 3px;
+        }
+
+        .settings-section {
+            display: none;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .generate-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .generate-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .generate-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .progress-section {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            color: #666;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .size-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .size-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #eee;
+        }
+
+        .size-item img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .size-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .download-section {
+            background: #f0f8ff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .download-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .download-button:hover {
+            background: #45a049;
+        }
+
+        .reset-button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .reset-button:hover {
+            background: #ff5252;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid #c62828;
+            display: none;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .size-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 macOSアイコン作成ツール</h1>
+            <p>PNG画像から自動でmacOS用アイコンセットを生成</p>
+        </div>
+
+        <div class="main-content">
+            <div class="warning-box">
+                <strong>⚠️ 重要:</strong> PNG形式の画像ファイル（1024×1024px以上推奨）をご用意ください。
+            </div>
+
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="margin-bottom: 15px; color: #333;">📦 作成されるアイコンの種類</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <h4 style="color: #495057; margin-bottom: 10px;">🖥️ メニューバー・Dock用</h4>
+                        <p style="color: #6c757d; font-size: 0.9em;">16×16, 32×32, 64×64px<br>システム表示・小さなアイコン</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <h4 style="color: #495057; margin-bottom: 10px;">📁 Finder・リスト用</h4>
+                        <p style="color: #6c757d; font-size: 0.9em;">128×128, 256×256px<br>ファイル表示・中サイズアイコン</p>
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
+                        <h4 style="color: #495057; margin-bottom: 10px;">🎯 アプリケーション用</h4>
+                        <p style="color: #6c757d; font-size: 0.9em;">512×512, 1024×1024px<br>アプリアイコン・高解像度表示</p>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding: 12px; background: #e3f2fd; border-radius: 6px;">
+                    <strong style="color: #1976d2;">💡 ポイント:</strong> 
+                    <span style="color: #1565c0;">Retina対応のため、各サイズに通常版と@2x版が生成されます。これにより全てのmacOS環境で美しく表示されます。</span>
+                </div>
+            </div>
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">PNG画像をここにドラッグ&ドロップ</div>
+                <div class="upload-subtext">またはクリックしてファイルを選択</div>
+            </div>
+
+            <input type="file" id="fileInput" accept=".png,image/png" style="display: none;">
+
+            <div class="error-message" id="errorMessage"></div>
+
+            <div class="preview-section" id="previewSection">
+                <div class="preview-container">
+                    <img id="previewImage" class="preview-image" alt="プレビュー">
+                    <div class="preview-info">
+                        <h3 id="fileName">ファイル名</h3>
+                        <p id="fileSize">ファイルサイズ</p>
+                        <p id="fileDimensions">画像サイズ</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-section" id="settingsSection">
+                <div class="form-group">
+                    <label for="outputName">出力名（オプション）:</label>
+                    <input type="text" id="outputName" placeholder="例: MyApp, Calculator など">
+                </div>
+                <button class="generate-button" id="generateButton">🚀 アイコンセットを生成</button>
+            </div>
+
+            <div class="progress-section" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">準備中...</div>
+            </div>
+
+            <div class="results-section" id="resultsSection">
+                <h3>📱 生成されたアイコンセット</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px; color: #333;">📋 ファイル名の説明</h4>
+                    <div style="font-size: 0.9em; color: #555; line-height: 1.6;">
+                        <p><strong>icon_16x16.png</strong> → 16×16px（メニューバー用）</p>
+                        <p><strong>icon_16x16@2x.png</strong> → 32×32px（Retina版メニューバー用）</p>
+                        <p><strong>icon_32x32.png</strong> → 32×32px（Dock小サイズ用）</p>
+                        <p><strong>icon_32x32@2x.png</strong> → 64×64px（Retina版Dock小サイズ用）</p>
+                        <p><strong>icon_128x128.png</strong> → 128×128px（Finder表示用）</p>
+                        <p><strong>icon_128x128@2x.png</strong> → 256×256px（Retina版Finder用）</p>
+                        <p><strong>icon_256x256.png</strong> → 256×256px（大きなアイコン表示用）</p>
+                        <p><strong>icon_256x256@2x.png</strong> → 512×512px（Retina版大きなアイコン用）</p>
+                        <p><strong>icon_512x512.png</strong> → 512×512px（アプリケーションアイコン用）</p>
+                        <p><strong>icon_512x512@2x.png</strong> → 1024×1024px（Retina版アプリアイコン用）</p>
+                    </div>
+                </div>
+                <div class="size-grid" id="sizeGrid"></div>
+                <div class="download-section">
+                    <h4>💾 ダウンロード</h4>
+                    <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #dee2e6;">
+                        <h5 style="margin-bottom: 10px; color: #495057;">🎯 用途別ダウンロード推奨</h5>
+                        <div style="font-size: 0.9em; color: #6c757d; line-height: 1.5;">
+                            <p><strong>🖥️ システム開発者:</strong> 全サイズダウンロード → Xcodeのアセットカタログに配置</p>
+                            <p><strong>📱 個人利用:</strong> 512×512, 1024×1024のみ → 一般的なアプリ用途</p>
+                            <p><strong>🌐 ウェブ開発者:</strong> 16×16, 32×32, 64×64 → ファビコン・小アイコン用</p>
+                        </div>
+                    </div>
+                    <button class="download-button" id="downloadZip">📦 全サイズダウンロード</button>
+                    <div id="individualDownloads"></div>
+                    <button class="reset-button" id="resetButton">🔄 新しい画像で再作成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class MacOSIconGenerator {
+            constructor() {
+                this.iconSizes = [
+                    { size: 16, name: 'icon_16x16.png' },
+                    { size: 32, name: 'icon_16x16@2x.png' },
+                    { size: 32, name: 'icon_32x32.png' },
+                    { size: 64, name: 'icon_32x32@2x.png' },
+                    { size: 128, name: 'icon_128x128.png' },
+                    { size: 256, name: 'icon_128x128@2x.png' },
+                    { size: 256, name: 'icon_256x256.png' },
+                    { size: 512, name: 'icon_256x256@2x.png' },
+                    { size: 512, name: 'icon_512x512.png' },
+                    { size: 1024, name: 'icon_512x512@2x.png' }
+                ];
+                
+                this.generatedImages = [];
+                this.originalImage = null;
+                this.initEventListeners();
+            }
+
+            initEventListeners() {
+                const uploadArea = document.getElementById('uploadArea');
+                const fileInput = document.getElementById('fileInput');
+                const generateButton = document.getElementById('generateButton');
+                const downloadZip = document.getElementById('downloadZip');
+                const resetButton = document.getElementById('resetButton');
+
+                // ドラッグ&ドロップ
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        this.handleFileSelect(files[0]);
+                    }
+                });
+
+                // クリックでファイル選択
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        this.handleFileSelect(e.target.files[0]);
+                    }
+                });
+
+                // 生成ボタン
+                generateButton.addEventListener('click', () => {
+                    this.generateIcons();
+                });
+
+                // ZIPダウンロード
+                downloadZip.addEventListener('click', () => {
+                    this.downloadAsZip();
+                });
+
+                // リセットボタン
+                resetButton.addEventListener('click', () => {
+                    this.reset();
+                });
+            }
+
+            handleFileSelect(file) {
+                // PNG形式チェック
+                if (!file.type.includes('png')) {
+                    this.showError('PNG形式のファイルを選択してください。');
+                    return;
+                }
+
+                // ファイルサイズチェック（10MB以下）
+                if (file.size > 10 * 1024 * 1024) {
+                    this.showError('ファイルサイズが大きすぎます（10MB以下にしてください）。');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        // 画像サイズチェック
+                        if (img.width < 512 || img.height < 512) {
+                            this.showError('画像サイズが小さすぎます（512×512px以上推奨）。');
+                            return;
+                        }
+
+                        if (img.width !== img.height) {
+                            this.showError('正方形の画像を使用してください。');
+                            return;
+                        }
+
+                        this.originalImage = img;
+                        this.showPreview(file, img);
+                        this.hideError();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            showPreview(file, img) {
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                document.getElementById('fileDimensions').textContent = `${img.width} × ${img.height} px`;
+                document.getElementById('previewImage').src = img.src;
+
+                document.getElementById('uploadArea').classList.add('has-file');
+                document.getElementById('previewSection').style.display = 'block';
+                document.getElementById('settingsSection').style.display = 'block';
+
+                // 出力名のデフォルト値設定
+                const baseName = file.name.replace(/\.[^/.]+$/, "");
+                document.getElementById('outputName').value = baseName;
+            }
+
+            async generateIcons() {
+                if (!this.originalImage) return;
+
+                const generateButton = document.getElementById('generateButton');
+                const progressSection = document.getElementById('progressSection');
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+
+                generateButton.disabled = true;
+                progressSection.style.display = 'block';
+                this.generatedImages = [];
+
+                const outputName = document.getElementById('outputName').value || 'icon';
+
+                for (let i = 0; i < this.iconSizes.length; i++) {
+                    const iconInfo = this.iconSizes[i];
+                    const progress = ((i + 1) / this.iconSizes.length) * 100;
+
+                    progressFill.style.width = `${progress}%`;
+                    progressText.textContent = `${iconInfo.size}×${iconInfo.size} 生成中... (${i + 1}/${this.iconSizes.length})`;
+
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = iconInfo.size;
+                    canvas.height = iconInfo.size;
+
+                    // 高品質リサイズ
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.drawImage(this.originalImage, 0, 0, iconInfo.size, iconInfo.size);
+
+                    // Blob作成
+                    const blob = await new Promise(resolve => {
+                        canvas.toBlob(resolve, 'image/png', 1.0);
+                    });
+
+                    this.generatedImages.push({
+                        size: iconInfo.size,
+                        name: iconInfo.name,
+                        blob: blob,
+                        url: URL.createObjectURL(blob)
+                    });
+
+                    // 少し待機（UIの更新のため）
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+
+                progressText.textContent = '完了！';
+                setTimeout(() => {
+                    progressSection.style.display = 'none';
+                    this.showResults();
+                    generateButton.disabled = false;
+                }, 500);
+            }
+
+            showResults() {
+                const sizeGrid = document.getElementById('sizeGrid');
+                const individualDownloads = document.getElementById('individualDownloads');
+                
+                sizeGrid.innerHTML = '';
+                individualDownloads.innerHTML = '';
+
+                this.generatedImages.forEach(img => {
+                    // グリッド表示
+                    const sizeItem = document.createElement('div');
+                    sizeItem.className = 'size-item';
+                    sizeItem.innerHTML = `
+                        <img src="${img.url}" alt="${img.size}x${img.size}">
+                        <div class="size-label">${img.size}×${img.size}</div>
+                        <div class="size-label">${img.name}</div>
+                    `;
+                    sizeGrid.appendChild(sizeItem);
+
+                    // 個別ダウンロードボタン
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.className = 'download-button';
+                    downloadBtn.textContent = `${img.size}×${img.size}`;
+                    downloadBtn.onclick = () => this.downloadSingle(img);
+                    individualDownloads.appendChild(downloadBtn);
+                });
+
+                document.getElementById('resultsSection').style.display = 'block';
+            }
+
+            async downloadAsZip() {
+                // 簡易ZIP実装（実際のプロジェクトではJSZipライブラリを使用推奨）
+                const outputName = document.getElementById('outputName').value || 'icon';
+                
+                // 個別ダウンロードとして実装
+                this.generatedImages.forEach((img, index) => {
+                    setTimeout(() => {
+                        this.downloadSingle(img);
+                    }, index * 200); // 少し間隔を空けてダウンロード
+                });
+            }
+
+            downloadSingle(img) {
+                const a = document.createElement('a');
+                a.href = img.url;
+                a.download = img.name;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            showError(message) {
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+
+            hideError() {
+                document.getElementById('errorMessage').style.display = 'none';
+            }
+
+            reset() {
+                // 全てのURLを解放
+                this.generatedImages.forEach(img => {
+                    URL.revokeObjectURL(img.url);
+                });
+
+                this.generatedImages = [];
+                this.originalImage = null;
+
+                // UI をリセット
+                document.getElementById('uploadArea').classList.remove('has-file');
+                document.getElementById('previewSection').style.display = 'none';
+                document.getElementById('settingsSection').style.display = 'none';
+                document.getElementById('progressSection').style.display = 'none';
+                document.getElementById('resultsSection').style.display = 'none';
+                document.getElementById('fileInput').value = '';
+                document.getElementById('outputName').value = '';
+                this.hideError();
+            }
+        }
+
+        // アプリケーション開始
+        document.addEventListener('DOMContentLoaded', () => {
+            new MacOSIconGenerator();
+        });
+    </script>
+</body>
+</html>
